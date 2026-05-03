@@ -7,25 +7,30 @@ networks:
 services:
   anything-llm:
     container_name: anythingllm
-    build:
-      context: ../.
-      dockerfile: ./docker/Dockerfile
-      args:
-        ARG_UID: ${UID:-1000}
-        ARG_GID: ${GID:-1000}
+    image: mintplexlabs/anythingllm
     cap_add:
       - SYS_ADMIN
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - UID=1000
+      - GID=1000
     volumes:
-      - "./.env:/app/server/.env"
-      - "../server/storage:/app/server/storage"
-      - "../collector/hotdir/:/app/collector/hotdir"
-      - "../collector/outputs/:/app/collector/outputs"
-    user: "${UID:-1000}:${GID:-1000}"
+      - anythingllm-storage:/app/server/storage
+      - anythingllm-hotdir:/app/collector/hotdir
+      - anythingllm-outputs:/app/collector/outputs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.anythingllm.rule=Host(`anything-llm.stevesbbs.com\
+        `)"
+      - "traefik.http.services.anythingllm.loadbalancer.server.port=3001"
     ports:
       - "8006:3001"
-    env_file:
-      - .env
     networks:
       - anything-llm
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+volumes:
+  anythingllm-storage:
+  anythingllm-hotdir:
+  anythingllm-outputs:
