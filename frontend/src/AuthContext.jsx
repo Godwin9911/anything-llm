@@ -49,6 +49,12 @@ export function AuthProvider(props) {
    */
   useEffect(() => {
     async function refreshUser() {
+      // The SSO passthrough page performs its own authoritative auth exchange and
+      // will overwrite the stored token itself. A stale token still present in
+      // localStorage while that exchange is in flight must not be allowed to force
+      // a logout redirect here - that races with (and can beat) the SSO login.
+      if (window.location.pathname.startsWith("/sso/")) return;
+
       const { success, user: refreshedUser } = await System.refreshUser();
       if (success && refreshedUser === null) return;
 

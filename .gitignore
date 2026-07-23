@@ -10,3 +10,6 @@ aws_cf_deploy_anything_llm.json
 yarn.lock
 *.bak
 .idea
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
