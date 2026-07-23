@@ -15,11 +15,11 @@ export default function SimpleSSOPassthrough() {
     try {
       if (!query.get("token")) throw new Error("No token provided.");
 
-      // Clear any existing auth data
-      window.localStorage.removeItem(AUTH_USER);
-      window.localStorage.removeItem(AUTH_TOKEN);
-      window.localStorage.removeItem(AUTH_TIMESTAMP);
-
+      // Note: we intentionally do NOT clear existing auth data here before the
+      // exchange completes. AuthContext's refreshUser() effect runs concurrently
+      // on this page and reads localStorage at fetch time - clearing early leaves
+      // a window with no token, causing that request to 401 and force a logout
+      // redirect that races with (and can beat) this SSO login.
       System.simpleSSOLogin(query.get("token"))
         .then((res) => {
           if (!res.valid) throw new Error(res.message);
@@ -30,6 +30,9 @@ export default function SimpleSSOPassthrough() {
           setReady(res.valid);
         })
         .catch((e) => {
+          window.localStorage.removeItem(AUTH_USER);
+          window.localStorage.removeItem(AUTH_TOKEN);
+          window.localStorage.removeItem(AUTH_TIMESTAMP);
           setError(e.message);
         });
     } catch (e) {
